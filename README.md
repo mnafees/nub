@@ -10,4 +10,5 @@ Once you've logged in, the upload button appears. Click on it, select a file and
 
 ##Credits:
 o2 - OAuth library for Qt - https://github.com/pipacs/o2
+
 qt-json - Simple JSON parser for Qt - https://github.com/ereilin/qt-json
