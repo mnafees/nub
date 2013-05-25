@@ -281,19 +281,20 @@ void O1::onTokenRequestFinished() {
     url.addQueryItem("oauth_token", requestToken_);
     url.addQueryItem("oauth_callback", QString("http://127.0.0.1:%1").arg(replyServer_->serverPort()).toAscii());
     emit openBrowser(url);
+
 }
 
 void O1::onVerificationReceived(QMap<QString, QString> params) {
     trace() << "O1::onVerificationReceived";
     emit closeBrowser();
     verifier_ = params.value("oauth_verifier", "");
-    if (params.value("oauth_token") == requestToken_) {
+    //if (params.value("oauth_token") == requestToken_) {
         // Exchange request token for access token
         exchangeToken();
-    } else {
-        qWarning() << "O1::onVerificationReceived: oauth_token missing or doesn't match";
-        emit linkingFailed();
-    }
+    //} else {
+    //    qWarning() << "O1::onVerificationReceived: oauth_token missing or doesn't match";
+    //    emit linkingFailed();
+    //}
 }
 
 void O1::exchangeToken() {

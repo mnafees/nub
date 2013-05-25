@@ -36,8 +36,8 @@
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QDateTime>
-#include <QWebView>
 #include <QDesktopWidget>
+#include <QDesktopServices>
 #include <QDebug>
 
 // o2
@@ -110,16 +110,12 @@ void nub::onLinkingSucceeded()
 
 void nub::onOpenBrowser( QUrl url )
 {
-    webView = new QWebView( this );
-    webView->setFixedSize( 500, 400 );
-    webView->setWindowFlags( Qt::Sheet );
-    webView->setUrl( url );
-    webView->show();
+    QDesktopServices::openUrl( url );
 }
 
 void nub::onCloseBrowser()
 {
-    webView->close();
+    /** @todo Find how to handle this */
 }
 
 void nub::deauthorize()

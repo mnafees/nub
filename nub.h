@@ -41,7 +41,6 @@ class MainWindow;
 class O1Dropbox;
 class O1RequestParameter;
 class QByteArray;
-class QWebView;
 
 class nub : public QWidget
 {
@@ -67,7 +66,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QWebView *webView;
     O1Dropbox *dropbox;
     QNetworkAccessManager *manager;
     QByteArray data;
