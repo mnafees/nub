@@ -58,6 +58,7 @@ nub::nub( QWidget *parent ) :
     m_index( 0 )
 {
     ui->setupUi( this );
+    // Place the widget in an appropriate place on the desktop
     setGeometry( qApp->desktop()->availableGeometry().width() / 2 - 250,
                  qApp->desktop()->availableGeometry().y() + 100, 500, 158 );
 
@@ -283,7 +284,6 @@ void nub::commitChunkUpload()
     req.setRawHeader( "Authorization", O1::buildAuthorizationHeader( param ) );
     req.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
     QNetworkReply *reply = manager->post( req, paramArray );
-    reply->deleteLater();
     connect( reply, SIGNAL(finished()), SLOT(chunkUploadCommitted()) );
 }
 
