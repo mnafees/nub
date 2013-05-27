@@ -15,11 +15,13 @@ include(o2/o2.pri)
 
 SOURCES += main.cpp \
     nub.cpp \
-    qt-json/json.cpp
+    qt-json/json.cpp \
+    ChunkUploader.cpp
 
 HEADERS  += \
     nub.h \
-    qt-json/json.h
+    qt-json/json.h \
+    ChunkUploader.h
 
 FORMS    += \
     nub.ui

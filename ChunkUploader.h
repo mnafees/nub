@@ -26,42 +26,63 @@
  * official policies, either expressed or implied, of Mohammed Nafees.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef CHUNKUPLOADER_H
+#define CHUNKUPLOADER_H
 
 // Qt
 #include <QWidget>
+#include <QFile>
 #include <QNetworkAccessManager>
-#include <QUrl>
 
-namespace Ui {
-class MainWindow;
-}
+// o2
+#include "o2/o1dropbox.h"
 
-class O1Dropbox;
-class O1RequestParameter;
 class QByteArray;
 
-class nub : public QWidget
+enum AppType {
+    FullDropbox,
+    AppFolder
+};
+
+class ChunkUploader : public QWidget
 {
     Q_OBJECT
 public:
-    explicit nub( QWidget *parent = 0 );
-    ~nub();
+    explicit ChunkUploader( QWidget *parent );
+    ~ChunkUploader();
+
+    void initialise( QString file );
+    void setClients( O1Dropbox *dropboxClient, QNetworkAccessManager *managerClient );
+    void setAppType( AppType type );
+
+signals:
+    void uploadingChunks();
+    void uploadProgressChanged( int change );
+    void errorOccurred();
+    void uploadSuccessful();
 
 private slots:
-    void onLinkingFailed();
-    void onLinkingSucceeded();
-    void onOpenBrowser( QUrl url );
-    void onCloseBrowser();
-    void deauthorize();
-    void authorize();
-    void uploadFile( QString file );
+    void chunkUploadProgress( qint64 uploaded, qint64 );
+    void chunkUploaded();
+    void chunkUploadCommitted();
 
 private:
-    Ui::MainWindow *ui;
-    O1Dropbox *dropbox;
-    QNetworkAccessManager *manager;
+    O1Dropbox *m_dropbox;
+    QNetworkAccessManager *m_manager;
+
+    QByteArray m_data;
+    QString m_fileName;
+    QString m_uploadId;
+    qint64 m_chunkSize;
+    qint64 m_totalBytes;
+    qint64 m_totalUploaded;
+    qint64 m_index;
+    qint64 m_uploadedLast;
+    AppType m_appType;
+
+    void uploadChunks();
+    void handleProgressBar();
+    void commitChunkUpload();
 };
 
 #endif

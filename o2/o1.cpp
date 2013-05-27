@@ -281,7 +281,6 @@ void O1::onTokenRequestFinished() {
     url.addQueryItem("oauth_token", requestToken_);
     url.addQueryItem("oauth_callback", QString("http://127.0.0.1:%1").arg(replyServer_->serverPort()).toAscii());
     emit openBrowser(url);
-
 }
 
 void O1::onVerificationReceived(QMap<QString, QString> params) {
