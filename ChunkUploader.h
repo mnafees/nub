@@ -70,6 +70,7 @@ private:
     O1Dropbox *m_dropbox;
     QNetworkAccessManager *m_manager;
 
+    QFile m_selectedFile;
     QByteArray m_data;
     QString m_fileName;
     QString m_uploadId;

@@ -61,7 +61,7 @@ ChunkUploader::~ChunkUploader()
 
 void ChunkUploader::initialise( QString file )
 {
-    QFile m_selectedFile( file );
+    m_selectedFile.setFileName( file );
     if (  m_selectedFile.bytesAvailable() < m_chunkSize ) {
         /** @brief The file is less than 4MB so we need to calculate the appropriate
          * chunk size for this upload. For ease of use, we'll keep chunk size
@@ -73,9 +73,7 @@ void ChunkUploader::initialise( QString file )
 
     if ( m_selectedFile.open( QIODevice::ReadOnly ) ) {
         m_fileName = QFileInfo( m_selectedFile ).fileName();
-        m_data = m_selectedFile.readAll();
-        m_totalBytes = m_data.length();
-        m_selectedFile.close();
+        m_totalBytes = m_selectedFile.bytesAvailable();
         uploadChunks();
     } else {
         QMessageBox::critical( parentWidget(), QString(), "Sorry but this file type is not supported"
@@ -103,6 +101,10 @@ void ChunkUploader::chunkUploadProgress( qint64 uploaded, qint64 )
 
 void ChunkUploader::uploadChunks()
 {
+    qint64 offset = m_totalBytes - m_totalUploaded < m_chunkSize ? m_totalBytes - m_totalUploaded : m_chunkSize;
+    qint64 toUpload = m_totalUploaded == 0 ? m_chunkSize : offset;
+    m_data = m_selectedFile.read( toUpload );
+
     QUrl uploadUrl( "https://api-content.dropbox.com/1/chunked_upload" );
     QList<O1RequestParameter> param;
     param.append( O1RequestParameter( "oauth_signature_method", "HMAC-SHA1" ) );
@@ -129,8 +131,8 @@ void ChunkUploader::uploadChunks()
     QNetworkRequest req( uploadUrl );
     req.setRawHeader( "Authorization", O1::buildAuthorizationHeader( param ) );
 
-    qint64 toUpload = m_totalBytes - m_totalUploaded < m_chunkSize ? m_totalBytes - m_totalUploaded : m_chunkSize;
-    QNetworkReply *reply = m_manager->put( req, m_data.mid( m_index, m_totalUploaded == 0 ? m_chunkSize : toUpload ) );
+
+    QNetworkReply *reply = m_manager->put( req, m_data );
     connect( reply, SIGNAL(finished()), SLOT(chunkUploaded()) );
     connect( reply, SIGNAL(uploadProgress(qint64,qint64)), SLOT(chunkUploadProgress(qint64,qint64)) );
 }
@@ -167,6 +169,7 @@ void ChunkUploader::chunkUploaded()
         commitChunkUpload();
     } else {
         m_index = m_totalUploaded;
+        m_selectedFile.seek( m_index );
         uploadChunks();
     }
     reply->deleteLater();
@@ -229,6 +232,7 @@ void ChunkUploader::chunkUploadCommitted()
         return;
     }
 
+    m_selectedFile.close();
     emit uploadSuccessful();
     reply->deleteLater();
 }
