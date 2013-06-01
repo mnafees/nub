@@ -26,52 +26,44 @@
  * official policies, either expressed or implied, of Mohammed Nafees.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+// Self
+#include "MacWebView.h"
 
-// Qt
-#include <QWidget>
-#include <QNetworkAccessManager>
-#include <QUrl>
-#ifdef Q_OS_MAC
-#include "mac/MacWebView.h"
-#else
-#include <QWebView>
-#endif
+// WebKit
+#include <WebKit/WebKit.h>
+#include <Webkit/WebView.h>
 
-namespace Ui {
-class MainWindow;
+NSString* fromQString( const QString &string )
+{
+    const QByteArray utf8 = string.toUtf8();
+    const char* cString = utf8.constData();
+    return [[NSString alloc] initWithUTF8String:cString];
 }
 
-class O1Dropbox;
-class O1RequestParameter;
-class QByteArray;
-
-class nub : public QWidget
+MacWebView::MacWebView( QWidget *parent ) :
+    QMacCocoaViewContainer( 0, parent ),
+    m_url( "" )
 {
-    Q_OBJECT
-public:
-    explicit nub( QWidget *parent = 0 );
-    ~nub();
+}
 
-private slots:
-    void onLinkingFailed();
-    void onLinkingSucceeded();
-    void onOpenBrowser( QUrl url );
-    void onCloseBrowser();
-    void deauthorize();
-    void authorize();
-    void uploadFile( QString file );
+MacWebView::~MacWebView()
+{
+}
 
-private:
-    Ui::MainWindow *ui;
-    O1Dropbox *dropbox;
-    QNetworkAccessManager *manager;
-#ifdef Q_OS_MAC
-    MacWebView *macWebView;
-#else
-    QWebView *qWebView;
-#endif
-};
+void MacWebView::setUrl( QUrl url )
+{
+    m_url = url.toString();
+    initialise();
+}
 
-#endif
+void MacWebView::initialise()
+{
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSRect rect = {{0, 0},{parentWidget()->width(), parentWidget()->height()}};
+    WebView *webView = [[WebView alloc] initWithFrame:rect frameName:nil groupName:nil];
+    setCocoaView( webView );
+    NSString *url = fromQString( m_url );
+    [[static_cast<WebView *> (this->cocoaView()) mainFrame] loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithString:url]]]];
+    [webView release];
+    [pool release];
+}

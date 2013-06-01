@@ -26,52 +26,26 @@
  * official policies, either expressed or implied, of Mohammed Nafees.
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef COCOAWEBVIEW_H
+#define COCOAWEBVIEW_H
 
 // Qt
-#include <QWidget>
-#include <QNetworkAccessManager>
 #include <QUrl>
-#ifdef Q_OS_MAC
-#include "mac/MacWebView.h"
-#else
-#include <QWebView>
-#endif
+#include <QWidget>
+#include <QMacCocoaViewContainer>
 
-namespace Ui {
-class MainWindow;
-}
-
-class O1Dropbox;
-class O1RequestParameter;
-class QByteArray;
-
-class nub : public QWidget
+class MacWebView : public QMacCocoaViewContainer
 {
-    Q_OBJECT
 public:
-    explicit nub( QWidget *parent = 0 );
-    ~nub();
+    MacWebView( QWidget *parent );
+    ~MacWebView();
 
-private slots:
-    void onLinkingFailed();
-    void onLinkingSucceeded();
-    void onOpenBrowser( QUrl url );
-    void onCloseBrowser();
-    void deauthorize();
-    void authorize();
-    void uploadFile( QString file );
+    void setUrl( QUrl url );
 
 private:
-    Ui::MainWindow *ui;
-    O1Dropbox *dropbox;
-    QNetworkAccessManager *manager;
-#ifdef Q_OS_MAC
-    MacWebView *macWebView;
-#else
-    QWebView *qWebView;
-#endif
+    void initialise();
+
+    QString m_url;
 };
 
 #endif

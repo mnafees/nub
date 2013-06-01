@@ -111,12 +111,29 @@ void nub::onLinkingSucceeded()
 
 void nub::onOpenBrowser( QUrl url )
 {
-    QDesktopServices::openUrl( url );
+#ifdef Q_OS_MAC
+    macWebView = new MacWebView( this );
+    macWebView->setGeometry( 0, 0, width(), 300 );
+    setGeometry( x(), y(), width(), 300 );
+    macWebView->setUrl( url );
+    macWebView->show();
+#else
+    qWebView = new QWebView( this );
+    qWebView->setWindowFlags( Qt::Sheet );
+    qWebView->setGeometry( 0, 0, width(), 300 );
+    qWebView->setUrl( url );
+    qWebView->show();
+#endif
 }
 
 void nub::onCloseBrowser()
 {
-    /** @todo Find how to handle this */
+#ifdef Q_OS_MAC
+    setGeometry( x(), y(), width(), 158 );
+    macWebView->close();
+#else
+    qWebView->close();
+#endif
 }
 
 void nub::deauthorize()

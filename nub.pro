@@ -26,4 +26,8 @@ HEADERS  += \
 FORMS    += \
     nub.ui
 
-RESOURCES +=
+macx {
+LIBS += -framework Cocoa -framework WebKit
+OBJECTIVE_SOURCES += mac/MacWebView.mm
+HEADERS  += mac/MacWebView.h
+}

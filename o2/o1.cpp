@@ -287,13 +287,13 @@ void O1::onVerificationReceived(QMap<QString, QString> params) {
     trace() << "O1::onVerificationReceived";
     emit closeBrowser();
     verifier_ = params.value("oauth_verifier", "");
-    //if (params.value("oauth_token") == requestToken_) {
+    if (params.value("oauth_token") == requestToken_) {
         // Exchange request token for access token
         exchangeToken();
-    //} else {
-    //    qWarning() << "O1::onVerificationReceived: oauth_token missing or doesn't match";
-    //    emit linkingFailed();
-    //}
+    } else {
+        qWarning() << "O1::onVerificationReceived: oauth_token missing or doesn't match";
+        emit linkingFailed();
+    }
 }
 
 void O1::exchangeToken() {
@@ -314,6 +314,7 @@ void O1::exchangeToken() {
     // Post request
     QNetworkRequest request(accessTokenUrl());
     request.setRawHeader("Authorization", buildAuthorizationHeader(oauthParams));
+    request.setHeader( QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded" );
     QNetworkReply *reply = manager_->post(request, QByteArray());
     connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onTokenExchangeError(QNetworkReply::NetworkError)));
     connect(reply, SIGNAL(finished()), this, SLOT(onTokenExchangeFinished()));
