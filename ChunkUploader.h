@@ -63,6 +63,7 @@ signals:
 
 private slots:
     void chunkUploadProgress( qint64 uploaded, qint64 );
+    void checkedForDuplicates();
     void chunkUploaded();
     void chunkUploadCommitted();
 
@@ -81,6 +82,7 @@ private:
     qint64 m_uploadedLast;
     AppType m_appType;
 
+    void checkForDuplicates();
     void uploadChunks();
     void handleProgressBar();
     void commitChunkUpload();

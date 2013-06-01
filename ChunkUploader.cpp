@@ -74,7 +74,7 @@ void ChunkUploader::initialise( QString file )
     if ( m_selectedFile.open( QIODevice::ReadOnly ) ) {
         m_fileName = QFileInfo( m_selectedFile ).fileName();
         m_totalBytes = m_selectedFile.bytesAvailable();
-        uploadChunks();
+        checkForDuplicates();
     } else {
         QMessageBox::critical( parentWidget(), QString(), "Sorry but this file type is not supported"
                                ". Please select an appropriate file to start uploading." );
@@ -97,6 +97,83 @@ void ChunkUploader::chunkUploadProgress( qint64 uploaded, qint64 )
     m_uploadedLast = uploaded;
     m_totalUploaded = m_index + m_uploadedLast;
     handleProgressBar();
+}
+
+void ChunkUploader::checkForDuplicates()
+{
+    QString url;
+    if ( m_appType == FullDropbox ) {
+        url = "https://api.dropbox.com/1/search/dropbox/Public";
+    } else if ( m_appType == AppFolder ) {
+        url = "https://api.dropbox.com/1/search/sandbox";
+    }
+
+    QUrl searchUrl( url );
+    QList<O1RequestParameter> param;
+    param.append( O1RequestParameter( "oauth_signature_method", "HMAC-SHA1" ) );
+    param.append( O1RequestParameter( "oauth_consumer_key", m_dropbox->clientId().toAscii() ) );
+    param.append( O1RequestParameter( "oauth_version", "1.0" ) );
+    param.append( O1RequestParameter( "oauth_timestamp", QString::number( QDateTime::currentDateTimeUtc().toTime_t() ).toAscii() ) );
+    param.append( O1RequestParameter( "oauth_nonce", m_dropbox->nonce() ) );
+    param.append( O1RequestParameter( "oauth_token", m_dropbox->token().toAscii() ) );
+    param.append( O1RequestParameter( "query", m_fileName.toAscii() ) );
+    QByteArray signature = O1::sign( param, QList<O1RequestParameter>(), searchUrl,
+                                     QNetworkAccessManager::GetOperation,
+                                     m_dropbox->clientSecret(), m_dropbox->tokenSecret() );
+    param.append( O1RequestParameter( "oauth_signature", signature ) );
+
+    for ( int i = 0; i < param.size() - 2; ++i ) {
+        searchUrl.addQueryItem( param.at(i).name, param.at(i).value );
+    }
+    searchUrl.addQueryItem( "oauth_signature", signature.toPercentEncoding() );
+    searchUrl.addQueryItem( "query", m_fileName );
+
+    QNetworkRequest req( searchUrl );
+    req.setRawHeader( "Authorization", O1::buildAuthorizationHeader( param ) );
+
+    QNetworkReply *reply = m_manager->get( req );
+    connect( reply, SIGNAL(finished()), SLOT(checkedForDuplicates()) );
+}
+
+void ChunkUploader::checkedForDuplicates()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply *>( sender() );
+    if ( reply->error() != QNetworkReply::NoError ) {
+        QMessageBox::critical( parentWidget(), QString(), reply->errorString() );
+        emit errorOccurred();
+        return;
+    }
+
+    QByteArray jsonOutput = reply->readAll();
+    bool ok;
+    QVariantMap result = QtJson::parse( QString::fromAscii( jsonOutput ), ok ).toMap();
+
+    if( !ok ) {
+        qFatal( "An error occurred during parsing the JSON ouput" );
+        return;
+    }
+
+    if ( !jsonOutput.contains( "path" ) ) {
+        uploadChunks();
+        qDebug() << "I'm here";
+    } else {
+        qDebug() << "I'm here 1";
+        QMessageBox *msgBox = new QMessageBox( parentWidget() );
+        QString folder = m_appType == FullDropbox ? "Dropbox Folder" : "App Folder";
+        msgBox->setText( QString( "This file already exists in your " + folder + ". Do you want to overwrite it?" ) );
+        msgBox->setStandardButtons( QMessageBox::Yes | QMessageBox::No );
+        msgBox->setDefaultButton( QMessageBox::No );
+        int ret = msgBox->exec();
+        switch ( ret ) {
+        case QMessageBox::Yes:
+            uploadChunks();
+            break;
+        case QMessageBox::No:
+            emit errorOccurred();
+            break;
+        }
+    }
+    reply->deleteLater();
 }
 
 void ChunkUploader::uploadChunks()

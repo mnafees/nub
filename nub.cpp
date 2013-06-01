@@ -172,5 +172,4 @@ void nub::uploadFile( QString file )
     connect( uploader, SIGNAL(uploadSuccessful()), ui->progressBar, SLOT(reset()) );
     connect( uploader, SIGNAL(uploadSuccessful()), ui->successLabel, SLOT(show()) );
     connect( uploader, SIGNAL(uploadSuccessful()), ui->uploadButton, SLOT(show()) );
-    //connect( uploader, SIGNAL(uploadSuccessful()), ui->deauthorizeButton, SLOT(setDisabled(bool)) );
 }
