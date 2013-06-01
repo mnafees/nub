@@ -4,7 +4,11 @@
 #
 #-------------------------------------------------
 
+macx {
 QT       += core gui network
+} else {
+QT       += core gui webkit network
+}
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,10 +29,6 @@ HEADERS  += \
 
 FORMS    += \
     nub.ui
-
-win32|linux {
-QT += webkit
-}
 
 macx {
 LIBS += -framework Cocoa -framework WebKit
