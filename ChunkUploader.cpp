@@ -73,6 +73,14 @@ void ChunkUploader::initialise( QString file )
 
     if ( m_selectedFile.open( QIODevice::ReadOnly ) ) {
         m_fileName = QFileInfo( m_selectedFile ).fileName();
+        if ( m_fileName.toAscii().toPercentEncoding().contains( "%20" ) ) {
+            // The filename contains a space which we need to remove
+            QStringList list = m_fileName.split( " " );
+            m_fileName = QString();
+            for ( int i = 0; i < list.size(); ++i ) {
+                m_fileName += i == list.size()-1 ? list.at(i) : list.at(i) + "_";
+            }
+        }
         m_totalBytes = m_selectedFile.bytesAvailable();
         checkForDuplicates();
     } else {
