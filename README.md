@@ -1,5 +1,7 @@
 #nub v0.2
 
+[![Build Status](https://travis-ci.org/binaryking/nub.png?branch=master)](https://travis-ci.org/binaryking/nub)
+
 Liked my work? You may tip me :) - http://gittip.com/binaryking
 
 nub uses the Dropbox Core API to upload files to your Dropbox account. Refer to https://www.dropbox.com/developers/core/docs#chunked-upload.
