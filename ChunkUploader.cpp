@@ -73,14 +73,14 @@ void ChunkUploader::initialise( QString file )
 
     if ( m_selectedFile.open( QIODevice::ReadOnly ) ) {
         m_fileName = QFileInfo( m_selectedFile ).fileName();
-        if ( m_fileName.toAscii().toPercentEncoding().contains( "%20" ) ) {
+        /*if ( m_fileName.toAscii().toPercentEncoding().contains( "%20" ) ) {
             // The filename contains a space which we need to remove
             QStringList list = m_fileName.split( " " );
             m_fileName = QString();
             for ( int i = 0; i < list.size(); ++i ) {
                 m_fileName += i == list.size()-1 ? list.at(i) : list.at(i) + "_";
             }
-        }
+        }*/
         m_totalBytes = m_selectedFile.bytesAvailable();
         checkForDuplicates();
     } else {
@@ -134,7 +134,7 @@ void ChunkUploader::checkForDuplicates()
         searchUrl.addQueryItem( param.at(i).name, param.at(i).value );
     }
     searchUrl.addQueryItem( "oauth_signature", signature.toPercentEncoding() );
-    searchUrl.addQueryItem( "query", m_fileName );
+    searchUrl.addQueryItem( "query", m_fileName.toAscii() );
 
     QNetworkRequest req( searchUrl );
     req.setRawHeader( "Authorization", O1::buildAuthorizationHeader( param ) );
@@ -148,18 +148,12 @@ void ChunkUploader::checkedForDuplicates()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>( sender() );
     if ( reply->error() != QNetworkReply::NoError ) {
         QMessageBox::critical( parentWidget(), QString(), reply->errorString() );
+        m_selectedFile.close();
         emit errorOccurred();
         return;
     }
 
     QByteArray jsonOutput = reply->readAll();
-    bool ok;
-    QVariantMap result = QtJson::parse( QString::fromAscii( jsonOutput ), ok ).toMap();
-
-    if( !ok ) {
-        qFatal( "An error occurred during parsing the JSON ouput" );
-        return;
-    }
 
     if ( !jsonOutput.contains( "path" ) ) {
         uploadChunks();
@@ -216,7 +210,6 @@ void ChunkUploader::uploadChunks()
     QNetworkRequest req( uploadUrl );
     req.setRawHeader( "Authorization", O1::buildAuthorizationHeader( param ) );
 
-
     QNetworkReply *reply = m_manager->put( req, m_data );
     connect( reply, SIGNAL(finished()), SLOT(chunkUploaded()) );
     connect( reply, SIGNAL(uploadProgress(qint64,qint64)), SLOT(chunkUploadProgress(qint64,qint64)) );
@@ -227,6 +220,7 @@ void ChunkUploader::chunkUploaded()
     QNetworkReply *reply = qobject_cast<QNetworkReply *>( sender() );
     if ( reply->error() != QNetworkReply::NoError ) {
         QMessageBox::critical( parentWidget(), QString(), reply->errorString() );
+        m_selectedFile.close();
         emit errorOccurred();
         return;
     }
@@ -270,9 +264,9 @@ void ChunkUploader::commitChunkUpload()
 {
     QString url;
     if ( m_appType == FullDropbox ) {
-        url = "https://api-content.dropbox.com/1/commit_chunked_upload/dropbox/Public/" + QUrl::toPercentEncoding( m_fileName );
+        url = "https://api-content.dropbox.com/1/commit_chunked_upload/dropbox/Public/" + m_fileName;
     } else if ( m_appType == AppFolder ) {
-        url = "https://api-content.dropbox.com/1/commit_chunked_upload/sandbox/" + QUrl::toPercentEncoding( m_fileName );
+        url = "https://api-content.dropbox.com/1/commit_chunked_upload/sandbox/" + m_fileName;
     }
 
     QUrl commitUrl( url );
@@ -313,6 +307,7 @@ void ChunkUploader::chunkUploadCommitted()
     if ( reply->error() != QNetworkReply::NoError ) {
         QMessageBox::critical( parentWidget(), QString(), reply->errorString() );
         qDebug() << reply->error();
+        m_selectedFile.close();
         emit errorOccurred();
         return;
     }
