@@ -66,14 +66,10 @@ nub::nub( QWidget *parent ) :
     dropbox = new O1Dropbox( this );
     dropbox->setClientId( APP_KEY );
     dropbox->setClientSecret( APP_SECRET );
-    if ( dropbox->linked() ) {
-        ui->deauthorizeButton->setEnabled( true );
-        ui->authorizeButton->setEnabled( false );
-    } else {
-        ui->uploadButton->hide();
-        ui->deauthorizeButton->setEnabled( false );
-        ui->authorizeButton->setEnabled( true );
-    }
+
+    ui->deauthorizeButton->setEnabled( dropbox->linked() );
+    ui->authorizeButton->setEnabled( !(dropbox->linked()) );
+    ui->uploadButton->setVisible( dropbox->linked() );
 
     QFileDialog *fileDialog = new QFileDialog( this, Qt::Sheet );
     connect( fileDialog, SIGNAL(fileSelected(QString)), SLOT(uploadFile(QString)) );
